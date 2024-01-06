@@ -1,0 +1,97 @@
+import json
+import itertools
+import numpy as np
+f = open('level0.json')
+
+data = json.load(f)
+
+rest_distances = []
+restaurants = []
+for i in data["neighbourhoods"]:
+	restaurants.append(i)
+
+for j in data["restaurants"]["r0"]["neighbourhood_distance"]:
+     rest_distances.append(j)
+rest_distances.append(0)
+l = []
+index = 0
+for i in restaurants:
+    data["neighbourhoods"][i]["distances"].append(rest_distances[index])
+    index += 1
+    l.append(data["neighbourhoods"][i]["distances"])
+    
+l.append(rest_distances)
+'''
+def nearest_neighbor(graph):
+    num_restaurants = len(graph)
+    unvisited_cities = set(range(1, num_restaurants))
+    current_city = 0
+    tour = [current_city]
+
+    while unvisited_cities:
+        nearest_city = min(unvisited_cities, key=lambda city: graph[current_city][city])
+        tour.append(nearest_city)
+        unvisited_cities.remove(nearest_city)
+        current_city = nearest_city
+
+    tour.append(tour[0])
+
+    return tour
+
+graph_example = [
+    [0, 10, 15, 20],
+    [10, 0, 35, 25],
+    [15, 35, 0, 30],
+    [20, 25, 30, 0]
+]
+
+result_tour = nearest_neighbor(l)
+print("Nearest Neighbor Tour:", result_tour)
+'''
+def tsp_dynamic_programming(graph):
+    n = len(graph)
+    all_points_set = set(range(n))
+    memo = {}
+
+    def tsp_dp_helper(current, subset):
+        if not subset:
+            return graph[current][0] 
+
+        subset_tuple = tuple(subset)
+        if (current, subset_tuple) in memo:
+            return memo[(current, subset_tuple)]
+
+        min_cost = float('inf')
+        for next_point in subset:
+            if next_point != current:
+                new_subset = tuple(point for point in subset if point != next_point)
+                cost = graph[current][next_point] + tsp_dp_helper(next_point, new_subset)
+                min_cost = min(min_cost, cost)
+
+        memo[(current, subset_tuple)] = min_cost
+        return min_cost
+
+    optimal_route = None
+    min_cost = float('inf')
+    for start_point in range(1, n):
+        subset = tuple(point for point in range(1, n) if point != start_point)
+        cost = graph[0][start_point] + tsp_dp_helper(start_point, subset)
+        if cost < min_cost:
+            min_cost = cost
+            optimal_route = (0, start_point) + tuple(subset)
+
+    return optimal_route, min_cost
+
+# Example usage:
+graph_example = [
+    [0, 10, 15, 20],
+    [10, 0, 35, 25],
+    [15, 35, 0, 30],
+    [20, 25, 30, 0]
+]
+
+optimal_route, min_cost = tsp_dynamic_programming(l)
+print("Optimal Route:", optimal_route)
+print("Minimum Cost:", min_cost)
+
+f.close()
